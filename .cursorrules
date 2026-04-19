@@ -1,0 +1,33 @@
+# قواعد المشروع - مدرسة طوي أعتير بنين للتعليم الأساسي
+
+## هوية المشروع
+- اسم المدرسة: مدرسة طوي أعتير بنين للتعليم الأساسي (5-12)
+- نوع الموقع: موقع رسمي احترافي
+- اللغة: عربي فقط - RTL دايماً
+- الألوان الرئيسية: أسود #0d0d0d، أبيض #ffffff، ذهبي #c9a84c
+- الخلفية الرئيسية: أبيض #ffffff
+- الخلفية الداكنة (hero/footer): أسود #0d0d0d
+- الـ accent الوحيد: ذهبي #c9a84c - يستخدم للخطوط والأزرار والتفاصيل فقط
+
+## Stack
+- Next.js 16 App Router
+- Tailwind CSS فقط - لا CSS خارجي
+- TypeScript strict - لا any
+- GSAP + ScrollTrigger للـ animations
+- react-pdf لعرض PDF
+- next/image لكل الصور
+
+## قواعد ثابتة
+- direction: rtl على كل الصفحات
+- كل component في /app/components
+- لا useEffect للـ animations - استخدم useGSAP
+- كل الصور lazy loading
+- الموقع responsive موبايل وديسكتوب
+- لا gradients - ألوان solid فقط
+
+## محتوى الموقع
+- Hero: اسم المدرسة + رسالتها + زرارين
+- 5 مجالات تقويم الأداء - كل واحد PDF
+- رسالة المدرسة الكاملة
+- وثائق الخطة المدرسية
+- سوشيال ميديا: Instagram وX - اسم الحساب: edugovdhf8163

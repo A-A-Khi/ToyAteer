@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --school-black: #0d0d0d;
+  --school-white: #ffffff;
+  --school-gold: #c9a84c;
+  --school-muted: #9ca3af;
+  --stats-bg: #f3f4f6;
+}
+
+@theme inline {
+  --color-school-black: var(--school-black);
+  --color-school-white: var(--school-white);
+  --color-school-gold: var(--school-gold);
+  --color-school-muted: var(--school-muted);
+  --color-stats-bg: var(--stats-bg);
+  --font-sans: var(--font-cairo);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--school-white);
+  color: var(--school-black);
+  font-family: var(--font-cairo), system-ui, sans-serif;
+}
