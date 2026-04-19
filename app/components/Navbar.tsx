@@ -57,6 +57,13 @@ export function Navbar() {
                 {l.label}
               </Link>
             ))}
+            <Link
+              href="/admin"
+              className="rounded border border-school-gold/60 px-3 py-1.5 text-sm font-semibold text-school-gold transition hover:bg-school-gold hover:text-school-black"
+              aria-label="لوحة إدارة الملفات — تسجيل الدخول"
+            >
+              تسجيل الدخول
+            </Link>
           </nav>
 
           <button
@@ -91,6 +98,14 @@ export function Navbar() {
                 {l.label}
               </Link>
             ))}
+            <Link
+              href="/admin"
+              className="mt-1 rounded border border-school-gold/60 px-3 py-2 text-center text-sm font-semibold text-school-gold hover:bg-school-gold hover:text-school-black"
+              onClick={() => setOpen(false)}
+              aria-label="لوحة إدارة الملفات — تسجيل الدخول"
+            >
+              تسجيل الدخول
+            </Link>
           </nav>
         </div>
       </div>

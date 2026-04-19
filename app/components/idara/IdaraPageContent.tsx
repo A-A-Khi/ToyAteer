@@ -24,6 +24,8 @@ type IdaraPageContentProps = {
   supervisoryGalleryUrls: readonly string[];
   meetingFilenames: readonly string[];
   planFilenames: readonly string[];
+  /** وثائق PDF إضافية من Supabase (مجلد idara/) */
+  extraMainDocumentsFromStorage?: readonly { title: string; url: string }[];
 };
 
 function pdfTitleFromFilename(filename: string): string {
@@ -122,6 +124,7 @@ export function IdaraPageContent({
   supervisoryGalleryUrls,
   meetingFilenames,
   planFilenames,
+  extraMainDocumentsFromStorage = [],
 }: IdaraPageContentProps) {
   return (
     <>
@@ -180,6 +183,11 @@ export function IdaraPageContent({
                 </li>
               );
             })}
+            {extraMainDocumentsFromStorage.map((item) => (
+              <li key={`storage:${item.url}`}>
+                <PDFHoverCard title={item.title} url={item.url} />
+              </li>
+            ))}
           </ul>
         </div>
       </section>

@@ -3,6 +3,11 @@ import { Navbar } from "@/app/components/Navbar";
 import { PdfViewerProvider } from "@/app/components/PDFViewer";
 import { SchoolFooter } from "@/app/components/SchoolFooter";
 import { SchoolShell } from "@/app/components/SchoolShell";
+import {
+  listStorageFilesForPrefix,
+  mergeUniqueUrls,
+  titleFromStorageFilename,
+} from "@/app/lib/storageBucket";
 import { siteFile } from "@/app/lib/publicAssets";
 
 export const metadata = {
@@ -42,16 +47,43 @@ const GALLERY_FILES = [
   "WhatsApp Image 2026-04-19 at 12.07.17 AM (3).jpeg",
 ] as const;
 
-export default function NomowPage() {
+export default async function NomowPage() {
   const videoUrl = siteFile([...BASE], VIDEO_FILE);
-  const galleryUrls = GALLERY_FILES.map((name) => siteFile([...BASE], name));
+  const galleryUrlsBase = GALLERY_FILES.map((name) => siteFile([...BASE], name));
+
+  const storage = await listStorageFilesForPrefix("nomow");
+  const storageImages = storage
+    .filter((f) => f.kind === "image")
+    .map((f) => f.url);
+  const galleryUrls = mergeUniqueUrls(galleryUrlsBase, storageImages);
+  const extraVideoUrls = storage
+    .filter((f) => f.kind === "video")
+    .map((f) => f.url);
+  const storagePdfs = storage
+    .filter((f) => f.kind === "pdf")
+    .map((f) => ({
+      title: titleFromStorageFilename(f.name),
+      url: f.url,
+    }));
+  const storageDocx = storage
+    .filter((f) => f.kind === "docx")
+    .map((f) => ({
+      label: titleFromStorageFilename(f.name),
+      url: f.url,
+    }));
 
   return (
     <PdfViewerProvider>
       <SchoolShell>
         <Navbar />
         <main className="flex flex-1 flex-col">
-          <NomowPageContent videoUrl={videoUrl} galleryUrls={galleryUrls} />
+          <NomowPageContent
+            videoUrl={videoUrl}
+            galleryUrls={galleryUrls}
+            extraVideoUrls={extraVideoUrls}
+            storagePdfs={storagePdfs}
+            storageDocx={storageDocx}
+          />
         </main>
         <SchoolFooter />
       </SchoolShell>

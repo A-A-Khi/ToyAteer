@@ -50,9 +50,21 @@ function DownloadIcon({ className }: { className?: string }) {
 type NomowPageContentProps = {
   videoUrl: string;
   galleryUrls: readonly string[];
+  /** فيديوهات إضافية من Supabase */
+  extraVideoUrls?: readonly string[];
+  /** PDF من Supabase */
+  storagePdfs?: readonly { title: string; url: string }[];
+  /** Word من Supabase */
+  storageDocx?: readonly { label: string; url: string }[];
 };
 
-export function NomowPageContent({ videoUrl, galleryUrls }: NomowPageContentProps) {
+export function NomowPageContent({
+  videoUrl,
+  galleryUrls,
+  extraVideoUrls = [],
+  storagePdfs = [],
+  storageDocx = [],
+}: NomowPageContentProps) {
   return (
     <>
       <header className="w-full bg-school-black">
@@ -111,6 +123,22 @@ export function NomowPageContent({ videoUrl, galleryUrls }: NomowPageContentProp
                 المتصفح لا يدعم تشغيل الفيديو.
               </video>
             </div>
+            {extraVideoUrls.map((src) => (
+              <div
+                key={src}
+                className="mt-10 overflow-hidden rounded-sm border-2 border-school-gold bg-school-black shadow-[0_0_0_1px_rgba(201,168,76,0.15)]"
+              >
+                <video
+                  className="aspect-video w-full bg-black object-contain"
+                  controls
+                  playsInline
+                  preload="metadata"
+                  src={src}
+                >
+                  المتصفح لا يدعم تشغيل الفيديو.
+                </video>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -177,6 +205,16 @@ export function NomowPageContent({ videoUrl, galleryUrls }: NomowPageContentProp
                 </li>
               );
             })}
+            {storagePdfs.map((item, i) => (
+              <li key={`storage-pdf:${item.url}`}>
+                <PDFHoverCard
+                  title={item.title}
+                  url={item.url}
+                  variant="row"
+                  index={PDF_FILES.length + i + 1}
+                />
+              </li>
+            ))}
           </ul>
 
           <h3 className="js-reveal mb-6 mt-16 text-xl font-bold text-school-black md:text-2xl">
@@ -203,6 +241,23 @@ export function NomowPageContent({ videoUrl, galleryUrls }: NomowPageContentProp
                 </li>
               );
             })}
+            {storageDocx.map((item) => (
+              <li key={`storage-docx:${item.url}`}>
+                <a
+                  href={item.url}
+                  download
+                  className="flex w-full items-center justify-between gap-4 border border-neutral-200 bg-neutral-50 px-5 py-4 text-school-black transition hover:border-school-gold hover:bg-white"
+                >
+                  <span className="min-w-0 break-words font-medium">
+                    {item.label}
+                  </span>
+                  <span className="inline-flex shrink-0 items-center gap-2 rounded border border-school-gold px-4 py-2 text-sm font-semibold text-school-gold">
+                    <DownloadIcon className="h-5 w-5 text-school-gold" />
+                    تحميل
+                  </span>
+                </a>
+              </li>
+            ))}
           </ul>
         </div>
       </section>

@@ -86,11 +86,17 @@ const DETAIL_CSVS: { filename: string; tableTitle: string }[] = [
 type InjazPageContentProps = {
   galleryUrls: readonly string[];
   docxFilenames: readonly string[];
+  /** PDF من Supabase (مجلد injaz/) */
+  storagePdfs?: readonly { title: string; url: string }[];
+  /** ملفات Word من Supabase */
+  storageDocx?: readonly { label: string; url: string }[];
 };
 
 export function InjazPageContent({
   galleryUrls,
   docxFilenames,
+  storagePdfs = [],
+  storageDocx = [],
 }: InjazPageContentProps) {
   const masteryCsvUrl = siteFile(
     [...BASE],
@@ -180,6 +186,16 @@ export function InjazPageContent({
                 </li>
               );
             })}
+            {storagePdfs.map((item, i) => (
+              <li key={`storage-pdf:${item.url}`}>
+                <PDFHoverCard
+                  title={item.title}
+                  url={item.url}
+                  variant="row"
+                  index={MAIN_DOCS.length + i + 1}
+                />
+              </li>
+            ))}
           </ul>
         </div>
       </section>
@@ -306,7 +322,7 @@ export function InjazPageContent({
           <h3 className="js-reveal mb-8 mt-20 text-xl font-bold text-school-black md:text-2xl">
             ملفات Word (تحميل)
           </h3>
-          {docxFilenames.length === 0 ? (
+          {docxFilenames.length === 0 && storageDocx.length === 0 ? (
             <p className="js-reveal text-school-muted">
               لا توجد ملفات Word في المجلد حالياً.
             </p>
@@ -331,6 +347,22 @@ export function InjazPageContent({
                   </li>
                 );
               })}
+              {storageDocx.map((item) => (
+                <li key={`storage-docx:${item.url}`}>
+                  <a
+                    href={item.url}
+                    download
+                    className="flex w-full items-center justify-between gap-4 border border-neutral-200 bg-neutral-50 px-5 py-4 text-school-black transition hover:border-school-gold hover:bg-white"
+                  >
+                    <span className="min-w-0 break-words font-medium">
+                      {item.label}
+                    </span>
+                    <span className="shrink-0 rounded border border-school-gold px-4 py-2 text-sm font-semibold text-school-gold">
+                      تحميل
+                    </span>
+                  </a>
+                </li>
+              ))}
             </ul>
           )}
         </div>

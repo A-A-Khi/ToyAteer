@@ -15,7 +15,14 @@ const items: { title: string; filename: string }[] = [
   },
 ];
 
-export function HomeDocumentsSection() {
+type HomeDocumentsSectionProps = {
+  /** وثائق إضافية من Supabase (مجلد home/) */
+  storageDocs?: readonly { title: string; url: string }[];
+};
+
+export function HomeDocumentsSection({
+  storageDocs = [],
+}: HomeDocumentsSectionProps) {
   return (
     <section
       id="home-docs"
@@ -38,6 +45,11 @@ export function HomeDocumentsSection() {
               </li>
             );
           })}
+          {storageDocs.map((item) => (
+            <li key={`storage:${item.url}`}>
+              <PDFHoverCard title={item.title} url={item.url} />
+            </li>
+          ))}
         </ul>
       </div>
     </section>

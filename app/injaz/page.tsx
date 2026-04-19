@@ -4,6 +4,11 @@ import { PdfViewerProvider } from "@/app/components/PDFViewer";
 import { SchoolFooter } from "@/app/components/SchoolFooter";
 import { SchoolShell } from "@/app/components/SchoolShell";
 import { listFilesByExtensionInPublicDir } from "@/app/lib/listPublicPdfs";
+import {
+  listStorageFilesForPrefix,
+  mergeUniqueUrls,
+  titleFromStorageFilename,
+} from "@/app/lib/storageBucket";
 import { siteFile } from "@/app/lib/publicAssets";
 
 export const metadata = {
@@ -39,10 +44,28 @@ const GALLERY_FILES = [
   "WhatsApp Image 2026-02-01 at 9.26.26 PM (1).jpeg",
 ] as const;
 
-export default function InjazPage() {
-  const galleryUrls = GALLERY_FILES.map((name) => siteFile([...BASE], name));
+export default async function InjazPage() {
+  const galleryUrlsBase = GALLERY_FILES.map((name) => siteFile([...BASE], name));
 
   const docxFilenames = listFilesByExtensionInPublicDir(DETAIL_FOLDER, "docx");
+
+  const storage = await listStorageFilesForPrefix("injaz");
+  const storageImages = storage
+    .filter((f) => f.kind === "image")
+    .map((f) => f.url);
+  const galleryUrls = mergeUniqueUrls(galleryUrlsBase, storageImages);
+  const storagePdfs = storage
+    .filter((f) => f.kind === "pdf")
+    .map((f) => ({
+      title: titleFromStorageFilename(f.name),
+      url: f.url,
+    }));
+  const storageDocx = storage
+    .filter((f) => f.kind === "docx")
+    .map((f) => ({
+      label: titleFromStorageFilename(f.name),
+      url: f.url,
+    }));
 
   return (
     <PdfViewerProvider>
@@ -52,6 +75,8 @@ export default function InjazPage() {
           <InjazPageContent
             galleryUrls={galleryUrls}
             docxFilenames={docxFilenames}
+            storagePdfs={storagePdfs}
+            storageDocx={storageDocx}
           />
         </main>
         <SchoolFooter />

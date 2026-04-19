@@ -6,6 +6,11 @@ import { SchoolShell } from "@/app/components/SchoolShell";
 import {
   listRootPdfsAndSubfolderPdfs,
 } from "@/app/lib/listPublicPdfs";
+import {
+  listStorageFilesForPrefix,
+  mergeUniqueUrls,
+  titleFromStorageFilename,
+} from "@/app/lib/storageBucket";
 import { siteFile } from "@/app/lib/publicAssets";
 
 export const metadata = {
@@ -29,8 +34,8 @@ const GALLERY_FILES = [
 
 const REQUIRED_ROOT_PDF = "اسماء اللجان.pdf";
 
-export default function ManakhPage() {
-  const galleryUrls = GALLERY_FILES.map((name) => siteFile([...BASE], name));
+export default async function ManakhPage() {
+  const galleryUrlsBase = GALLERY_FILES.map((name) => siteFile([...BASE], name));
 
   const { rootFiles: scannedRoot, subfolders } = listRootPdfsAndSubfolderPdfs(
     BASE
@@ -42,6 +47,18 @@ export default function ManakhPage() {
     a.localeCompare(b, "ar")
   );
 
+  const storage = await listStorageFilesForPrefix("manakh");
+  const storageImages = storage
+    .filter((f) => f.kind === "image")
+    .map((f) => f.url);
+  const galleryUrls = mergeUniqueUrls(galleryUrlsBase, storageImages);
+  const storagePdfs = storage
+    .filter((f) => f.kind === "pdf")
+    .map((f) => ({
+      title: titleFromStorageFilename(f.name),
+      url: f.url,
+    }));
+
   return (
     <PdfViewerProvider>
       <SchoolShell>
@@ -51,6 +68,7 @@ export default function ManakhPage() {
             galleryUrls={galleryUrls}
             rootPdfFiles={rootPdfFiles}
             subfolders={subfolders}
+            storagePdfs={storagePdfs}
           />
         </main>
         <SchoolFooter />

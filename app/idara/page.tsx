@@ -3,6 +3,11 @@ import { Navbar } from "@/app/components/Navbar";
 import { PdfViewerProvider } from "@/app/components/PDFViewer";
 import { SchoolFooter } from "@/app/components/SchoolFooter";
 import { SchoolShell } from "@/app/components/SchoolShell";
+import {
+  listStorageFilesForPrefix,
+  mergeUniqueUrls,
+  titleFromStorageFilename,
+} from "@/app/lib/storageBucket";
 import { siteFile } from "@/app/lib/publicAssets";
 
 export const metadata = {
@@ -115,8 +120,8 @@ const MAIN_DOCUMENTS = [
   { filename: "برامج الانماء المهني.pdf", title: "برامج الإنماء المهني" },
 ] as const;
 
-export default function IdaraPage() {
-  const galleryUrls = GALLERY_FILES.map((name) => siteFile([...BASE], name));
+export default async function IdaraPage() {
+  const galleryUrlsBase = GALLERY_FILES.map((name) => siteFile([...BASE], name));
   const teamGalleryUrls = TEAM_GALLERY_FILES.map((name) =>
     siteFile([...TEAM_SEG], name)
   );
@@ -126,6 +131,18 @@ export default function IdaraPage() {
   const supervisoryGalleryUrls = SUPERVISORY_GALLERY_FILES.map((name) =>
     siteFile([...SUPERVISORY_SEG], name)
   );
+
+  const storage = await listStorageFilesForPrefix("idara");
+  const storageImages = storage
+    .filter((f) => f.kind === "image")
+    .map((f) => f.url);
+  const galleryUrls = mergeUniqueUrls(galleryUrlsBase, storageImages);
+  const extraMainDocumentsFromStorage = storage
+    .filter((f) => f.kind === "pdf")
+    .map((f) => ({
+      title: titleFromStorageFilename(f.name),
+      url: f.url,
+    }));
 
   return (
     <PdfViewerProvider>
@@ -140,6 +157,7 @@ export default function IdaraPage() {
             supervisoryGalleryUrls={supervisoryGalleryUrls}
             meetingFilenames={MEETING_PDF_FILES}
             planFilenames={PLAN_PDF_FILES}
+            extraMainDocumentsFromStorage={extraMainDocumentsFromStorage}
           />
         </main>
         <SchoolFooter />

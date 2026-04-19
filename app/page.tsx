@@ -7,8 +7,20 @@ import { HomeDocumentsSection } from "./components/HomeDocumentsSection";
 import { DomainsSection } from "./components/DomainsSection";
 import { SchoolMessageSection } from "./components/SchoolMessageSection";
 import { SchoolFooter } from "./components/SchoolFooter";
+import {
+  listStorageFilesForPrefix,
+  titleFromStorageFilename,
+} from "./lib/storageBucket";
 
-export default function Home() {
+export default async function Home() {
+  const homeStorage = await listStorageFilesForPrefix("home");
+  const storageDocs = homeStorage
+    .filter((f) => f.kind === "pdf")
+    .map((f) => ({
+      title: titleFromStorageFilename(f.name),
+      url: f.url,
+    }));
+
   return (
     <PdfViewerProvider>
       <SchoolShell>
@@ -16,7 +28,7 @@ export default function Home() {
         <main className="flex flex-1 flex-col">
           <HeroSection />
           <StatsSection />
-          <HomeDocumentsSection />
+          <HomeDocumentsSection storageDocs={storageDocs} />
           <DomainsSection />
           <SchoolMessageSection />
           <SchoolFooter />
