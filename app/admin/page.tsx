@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { supabase } from "@/app/lib/supabase";
 import {
   STORAGE_BUCKET,
   type StorageDomainPrefix,
@@ -26,39 +25,13 @@ type ListedFile = {
   publicUrl: string;
 };
 
-async function listAllPathsRecursive(
-  prefix: string
-): Promise<string[]> {
-  const out: string[] = [];
-
-  async function walk(p: string) {
-    const { data, error } = await supabase.storage.from(BUCKET).list(p, {
-      limit: 1000,
-      sortBy: { column: "name", order: "asc" },
-    });
-    if (error || !data) return;
-
-    for (const item of data) {
-      const fullPath = p ? `${p}/${item.name}` : item.name;
-      const isFile =
-        item.metadata !== null &&
-        typeof (item.metadata as { size?: number }).size === "number";
-
-      if (isFile) {
-        out.push(fullPath);
-      } else {
-        await walk(fullPath);
-      }
-    }
-  }
-
-  await walk(prefix);
-  return out;
-}
-
-function publicUrlForPath(path: string): string {
-  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-  return data.publicUrl;
+function sanitizeStorageFileName(name: string): string {
+  const base = name
+    .replace(/^[/\\]+/, "")
+    .replace(/[/\\?*:"<>|]/g, "-")
+    .trim();
+  if (!base) return `file-${Date.now()}`;
+  return base;
 }
 
 function uploadWithProgress(
@@ -73,15 +46,20 @@ function uploadWithProgress(
     form.append("path", path);
 
     xhr.upload.addEventListener("progress", (e) => {
-      if (e.lengthComputable) {
+      if (e.lengthComputable && e.total > 0) {
         onProgress(Math.round((e.loaded / e.total) * 100));
       }
     });
 
     xhr.addEventListener("load", () => {
+      const text = xhr.responseText?.trim() ?? "";
       if (xhr.status >= 200 && xhr.status < 300) {
+        if (!text) {
+          reject(new Error("استجابة فارغة من الخادم بعد الرفع."));
+          return;
+        }
         try {
-          const json = JSON.parse(xhr.responseText) as {
+          const json = JSON.parse(text) as {
             publicUrl?: string;
             path?: string;
             error?: string;
@@ -90,22 +68,34 @@ function uploadWithProgress(
             resolve({ publicUrl: json.publicUrl, path: json.path });
             return;
           }
-          reject(new Error(json.error ?? "فشل الرفع"));
+          reject(new Error(json.error ?? "فشل الرفع — لم تُرجع روابط الملف."));
         } catch {
-          reject(new Error("استجابة غير متوقعة من الخادم"));
+          const hint = text.startsWith("<")
+            ? "الخادم أرجع صفحة HTML بدل JSON (غالباً خطأ داخلي أو حجم طلب كبير جداً)."
+            : text.slice(0, 200);
+          reject(new Error(`استجابة غير صالحة: ${hint}`));
         }
       } else {
         try {
-          const json = JSON.parse(xhr.responseText) as { error?: string };
-          reject(new Error(json.error ?? `خطأ ${xhr.status}`));
+          const json = text ? (JSON.parse(text) as { error?: string }) : {};
+          reject(
+            new Error(
+              json.error ??
+                `رفض الخادم (${xhr.status}): ${text.slice(0, 160) || "—"}`
+            )
+          );
         } catch {
-          reject(new Error(`خطأ ${xhr.status}`));
+          reject(
+            new Error(
+              `خطأ ${xhr.status}: ${text.slice(0, 200) || "لا يوجد تفاصيل"}`
+            )
+          );
         }
       }
     });
 
     xhr.addEventListener("error", () =>
-      reject(new Error("تعذّر الاتصال بالخادم"))
+      reject(new Error("تعذّر الاتصال بالخادم — تحقق من أن المشروع يعمل (npm run dev)."))
     );
 
     xhr.open("POST", "/api/admin/upload");
@@ -129,6 +119,7 @@ export default function AdminPage() {
   const [uploadPct, setUploadPct] = useState<number | null>(null);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<string | null>(null);
+  const [uploadMsgIsError, setUploadMsgIsError] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
   const [deletingPath, setDeletingPath] = useState<string | null>(null);
@@ -148,15 +139,20 @@ export default function AdminPage() {
     setLoadingList(true);
     setListError(null);
     try {
-      const paths = await listAllPathsRecursive(prefix);
-      const mapped: ListedFile[] = paths
-        .map((path) => ({
-          path,
-          name: path.replace(/^.*\//, ""),
-          publicUrl: publicUrlForPath(path),
-        }))
-        .sort((a, b) => a.path.localeCompare(b.path, "ar"));
-      setFiles(mapped);
+      const res = await fetch(
+        `/api/admin/list?prefix=${encodeURIComponent(prefix)}`
+      );
+      const text = await res.text();
+      let json: { files?: ListedFile[]; error?: string };
+      try {
+        json = text ? (JSON.parse(text) as { files?: ListedFile[]; error?: string }) : {};
+      } catch {
+        throw new Error("استجابة غير صالحة من خادم القائمة.");
+      }
+      if (!res.ok) {
+        throw new Error(json.error ?? `خطأ ${res.status}`);
+      }
+      setFiles(json.files ?? []);
     } catch (e) {
       setListError(e instanceof Error ? e.message : "تعذّر جلب الملفات");
       setFiles([]);
@@ -220,18 +216,20 @@ export default function AdminPage() {
       });
 
       if (allowed.length === 0) {
+        setUploadMsgIsError(true);
         setUploadMsg("يرجى اختيار صور أو PDF فقط.");
         return;
       }
 
       setUploadBusy(true);
       setUploadMsg(null);
+      setUploadMsgIsError(false);
       setUploadPct(0);
 
       try {
         for (let i = 0; i < allowed.length; i++) {
           const file = allowed[i];
-          const safeName = file.name.replace(/^[/\\]+/, "");
+          const safeName = sanitizeStorageFileName(file.name);
           const path = `${activeTab}/${safeName}`;
           await uploadWithProgress(file, path, (pct) => {
             const base = Math.round((i / allowed.length) * 100);
@@ -240,13 +238,17 @@ export default function AdminPage() {
           });
         }
         setUploadPct(100);
-        setUploadMsg(`تم رفع ${allowed.length} ملفاً بنجاح.`);
         await loadFiles(activeTab);
+        setUploadMsgIsError(false);
+        setUploadMsg(
+          `تم رفع ${allowed.length} ملفاً بنجاح. إذا لم يظهر في القائمة فوراً، اضغط «تحديث القائمة» أو راجع صلاحيات القراءة (list) في Supabase للـ bucket.`
+        );
       } catch (err) {
+        setUploadMsgIsError(true);
         setUploadMsg(err instanceof Error ? err.message : "فشل الرفع");
       } finally {
         setUploadBusy(false);
-        setTimeout(() => setUploadPct(null), 1200);
+        setTimeout(() => setUploadPct(null), 1800);
       }
     },
     [activeTab, loadFiles]
@@ -541,7 +543,12 @@ export default function AdminPage() {
             ) : null}
 
             {uploadMsg ? (
-              <p className="mt-4 text-sm text-school-muted">{uploadMsg}</p>
+              <p
+                className={`mt-4 text-sm ${uploadMsgIsError ? "text-red-400" : "text-emerald-400/90"}`}
+                role={uploadMsgIsError ? "alert" : "status"}
+              >
+                {uploadMsg}
+              </p>
             ) : null}
           </div>
         </section>

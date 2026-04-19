@@ -1,14 +1,16 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
 import { STORAGE_BUCKET } from "@/app/lib/storageBucket";
+import { createSupabaseForAdminApi } from "@/app/lib/supabaseAdminApi";
 
 export async function POST(request: Request) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) {
+  const supabase = createSupabaseForAdminApi();
+  if (!supabase) {
     return NextResponse.json(
-      { error: "Supabase غير مُعرّف في البيئة." },
+      {
+        error:
+          "Supabase غير مُعرّف. أضف NEXT_PUBLIC_SUPABASE_URL و SUPABASE_SERVICE_ROLE_KEY أو المفتاح العام.",
+      },
       { status: 500 }
     );
   }
@@ -37,16 +39,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "مسار غير صالح." }, { status: 400 });
   }
 
-  const supabase = createClient(url, key);
   const { error } = await supabase.storage
     .from(STORAGE_BUCKET)
     .remove([normalized]);
 
   if (error) {
-    return NextResponse.json(
-      { error: error.message ?? "فشل الحذف." },
-      { status: 500 }
-    );
+    let msg = error.message ?? "فشل الحذف.";
+    if (/row-level security|RLS|policy/i.test(msg)) {
+      msg +=
+        " أضف SUPABASE_SERVICE_ROLE_KEY في بيئة الخادم (ليس NEXT_PUBLIC).";
+    }
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

@@ -70,7 +70,6 @@ const SCIENCE_GALLERY_FILES = [
 const INITIATIVE_PDFS: { filename: string }[] = [
   { filename: "ملف الاستراتيجات.pdf" },
   { filename: "منصه نور.pdf" },
-  { filename: "896.pdf" },
   { filename: "المبرمج_الصغير_بناء_جيل_المستقبل.pdf" },
   { filename: "كتيب المسابقة.pdf" },
   { filename: "كتيب المسابقة (1).pdf" },
@@ -87,7 +86,6 @@ const INITIATIVE_PDFS: { filename: string }[] = [
 const INITIATIVE_TITLE_OVERRIDES: Record<string, string> = {
   "ملف الاستراتيجات.pdf": "ملف الاستراتيجات",
   "منصه نور.pdf": "منصة نور",
-  "896.pdf": "مستند مسح ضوئي",
   "كتيب المسابقة.pdf": "كتيب المسابقة",
   "كتيب المسابقة (1).pdf": "كتيب المسابقة (نسخة إضافية)",
   "كشف الطلاب المشاركين في مبادرة انا اشرح..انا اتعلم.pdf":

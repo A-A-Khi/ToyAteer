@@ -1,5 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
+
+import { createSupabaseForAdminApi } from "./supabaseAdminApi";
 
 export const STORAGE_BUCKET = "school-files" as const;
 
@@ -22,21 +23,42 @@ export type StorageFileRef = {
 
 function classifyKind(filename: string): StorageFileKind {
   const n = filename.toLowerCase();
-  if (/\.(jpe?g|png|gif|webp)$/i.test(n)) return "image";
+  if (/\.(jpe?g|png|gif|webp|heic|heif|bmp|svg)$/i.test(n)) return "image";
   if (/\.pdf$/i.test(n)) return "pdf";
   if (/\.docx$/i.test(n)) return "docx";
   if (/\.(mp4|webm|mov)$/i.test(n)) return "video";
   return "other";
 }
 
-function hasEnv(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+/**
+ * تمييز صف ملف حقيقي عن مجلد في `storage.list()`.
+ * بعض إصدارات Supabase لا تملأ metadata.size في القائمة، فيُعامل الملف كمجلد ويختفي من الموقع.
+ */
+export function isStorageListFileItem(item: {
+  name: string;
+  metadata?: Record<string, unknown> | null;
+}): boolean {
+  const meta = item.metadata;
+  if (meta && typeof meta === "object") {
+    if (typeof (meta as { size?: unknown }).size === "number") return true;
+    const mime = (meta as { mimetype?: unknown }).mimetype;
+    if (typeof mime === "string" && mime.length > 0) return true;
+  }
+  return /\.(pdf|jpe?g|png|gif|webp|heic|heif|bmp|svg|docx?|xlsx?|pptx?|mp4|webm|mov|zip|rar|csv|txt)$/i.test(
+    item.name
   );
 }
 
-async function listAllFilePaths(
+function hasEnv(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+        process.env.SUPABASE_SERVICE_ROLE_KEY)
+  );
+}
+
+/** جرد الملفات تحت بادئة في الـ bucket (للاستخدام مع عميل له صلاحية القراءة). */
+export async function listAllStorageObjectPaths(
   supabase: SupabaseClient,
   rootPrefix: string
 ): Promise<string[]> {
@@ -53,11 +75,7 @@ async function listAllFilePaths(
 
     for (const item of data) {
       const fullPath = prefix ? `${prefix}/${item.name}` : item.name;
-      const isFile =
-        item.metadata !== null &&
-        typeof (item.metadata as { size?: number }).size === "number";
-
-      if (isFile) {
+      if (isStorageListFileItem(item)) {
         out.push(fullPath);
       } else {
         await walk(fullPath);
@@ -83,12 +101,10 @@ export async function listStorageFilesForPrefix(
 ): Promise<StorageFileRef[]> {
   if (!hasEnv()) return [];
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createSupabaseForAdminApi();
+  if (!supabase) return [];
 
-  const paths = await listAllFilePaths(supabase, prefix);
+  const paths = await listAllStorageObjectPaths(supabase, prefix);
   const refs: StorageFileRef[] = [];
 
   for (const path of paths) {
