@@ -36,20 +36,20 @@ export function SchoolFooter() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 md:justify-start">
             <a
-              href="https://www.instagram.com/edugovdhf8163/"
+              href="https://www.instagram.com/edugovdhf8303/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-school-gold underline-offset-4 hover:underline"
             >
-              إنستغرام — edugovdhf8163
+              إنستغرام — edugovdhf8303
             </a>
             <a
-              href="https://x.com/edugovdhf8163"
+              href="https://x.com/edugovdhf8303"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-school-gold underline-offset-4 hover:underline"
             >
-              إكس — edugovdhf8163
+              إكس — edugovdhf8303
             </a>
           </div>
         </div>
