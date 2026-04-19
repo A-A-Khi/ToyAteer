@@ -11,7 +11,7 @@ const LOGO_SRC = siteFile(["الموقع"], "logo.jpeg");
 const links = [
   { href: "/#hero", label: "الرئيسية" },
   { href: "/manakh", label: "مناخ المدرسة" },
-  { href: "/idara", label: "الإدارة والقيادة" },
+  { href: "/idara", label: "القيادة والحوكمة" },
   { href: "/injaz", label: "الإنجاز الدراسي" },
   { href: "/tadrees", label: "التدريس والتقويم" },
   { href: "/nomow", label: "النمو الشخصي" },

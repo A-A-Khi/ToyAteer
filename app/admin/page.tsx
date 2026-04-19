@@ -13,7 +13,7 @@ const BUCKET = STORAGE_BUCKET;
 const DOMAIN_TABS: { key: StorageDomainPrefix; label: string }[] = [
   { key: "home", label: "الرئيسية" },
   { key: "manakh", label: "مناخ المدرسة" },
-  { key: "idara", label: "الإدارة والقيادة" },
+  { key: "idara", label: "القيادة والحوكمة" },
   { key: "injaz", label: "الإنجاز الدراسي" },
   { key: "tadrees", label: "التدريس والتقويم" },
   { key: "nomow", label: "النمو الشخصي" },

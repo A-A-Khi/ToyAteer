@@ -139,7 +139,7 @@ export function IdaraPageContent({
           </Link>
           <p className="mt-8 text-sm font-semibold text-school-gold">المجال 02</p>
           <h1 className="mt-2 text-3xl font-bold leading-tight text-school-white md:text-4xl">
-            مجال الإدارة والقيادة والحوكمة
+            مجال القيادة والحوكمة
           </h1>
         </div>
       </header>
@@ -158,7 +158,7 @@ export function IdaraPageContent({
           </h2>
           <ImageGallery
             images={galleryUrls}
-            altPrefix="مجال الإدارة والقيادة"
+            altPrefix="مجال القيادة والحوكمة"
           />
         </div>
       </section>
