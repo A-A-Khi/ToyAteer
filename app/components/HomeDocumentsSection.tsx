@@ -1,7 +1,9 @@
 "use client";
 
 import { PDFHoverCard } from "./PDFHoverCard";
+import { UploadedFromAdminSection } from "./UploadedFromAdminSection";
 import { siteFile } from "@/app/lib/publicAssets";
+import type { UploadedDocumentItem } from "@/app/lib/storageBucket";
 
 const items: { title: string; filename: string }[] = [
   { title: "رسالة المدير ورؤية المدير", filename: "رسالة المدير ورؤية المدير.pdf" },
@@ -16,12 +18,12 @@ const items: { title: string; filename: string }[] = [
 ];
 
 type HomeDocumentsSectionProps = {
-  /** وثائق إضافية من Supabase (مجلد home/) */
-  storageDocs?: readonly { title: string; url: string }[];
+  /** ملفات مرفوعة من Supabase (ما عدا الصور — الصور تُعرض في معرض منفصل) */
+  uploadedItems?: readonly UploadedDocumentItem[];
 };
 
 export function HomeDocumentsSection({
-  storageDocs = [],
+  uploadedItems = [],
 }: HomeDocumentsSectionProps) {
   return (
     <section
@@ -45,12 +47,17 @@ export function HomeDocumentsSection({
               </li>
             );
           })}
-          {storageDocs.map((item) => (
-            <li key={`storage:${item.url}`}>
-              <PDFHoverCard title={item.title} url={item.url} />
-            </li>
-          ))}
         </ul>
+
+        {uploadedItems.length > 0 ? (
+          <div className="mt-12">
+            <UploadedFromAdminSection
+              id="home-uploaded"
+              items={uploadedItems}
+              pdfCardVariant="card"
+            />
+          </div>
+        ) : null}
       </div>
     </section>
   );

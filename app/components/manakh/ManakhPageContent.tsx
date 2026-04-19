@@ -4,8 +4,10 @@ import Link from "next/link";
 
 import { ImageGallery } from "@/app/components/ImageGallery";
 import { PDFHoverCard } from "@/app/components/PDFHoverCard";
-import { siteFile } from "@/app/lib/publicAssets";
+import { UploadedFromAdminSection } from "@/app/components/UploadedFromAdminSection";
 import type { PublicSubfolderPdfGroup } from "@/app/lib/listPublicPdfs";
+import type { UploadedDocumentItem } from "@/app/lib/storageBucket";
+import { siteFile } from "@/app/lib/publicAssets";
 
 const BASE = ["الموقع", "مناخ المدرسة وبيئة التعلم"] as const;
 
@@ -21,15 +23,15 @@ type ManakhPageContentProps = {
   galleryUrls: readonly string[];
   rootPdfFiles: readonly string[];
   subfolders: readonly PublicSubfolderPdfGroup[];
-  /** PDF من Supabase (مجلد manakh/) */
-  storagePdfs?: readonly { title: string; url: string }[];
+  /** ملفات مرفوعة (ما عدا الصور) — مجلد manakh/ */
+  uploadedDocuments?: readonly UploadedDocumentItem[];
 };
 
 export function ManakhPageContent({
   galleryUrls,
   rootPdfFiles,
   subfolders,
-  storagePdfs = [],
+  uploadedDocuments = [],
 }: ManakhPageContentProps) {
   return (
     <>
@@ -151,37 +153,33 @@ export function ManakhPageContent({
             </div>
           ))}
 
-          {storagePdfs.length > 0 && (
-            <div
-              className={`js-reveal ${rootPdfFiles.length === 0 && subfolders.length === 0 ? "" : "mt-16"}`}
-            >
-              <h3 className="mb-6 text-center text-xl font-bold text-school-black md:text-2xl">
-                مرفقات من السحابة
-              </h3>
-              <ul className="divide-y divide-neutral-200 border-y border-neutral-200 bg-school-white">
-                {storagePdfs.map((item, i) => (
-                  <li key={`storage:${item.url}`}>
-                    <PDFHoverCard
-                      title={item.title}
-                      url={item.url}
-                      variant="row"
-                      index={i + 1}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
           {rootPdfFiles.length === 0 &&
             subfolders.length === 0 &&
-            storagePdfs.length === 0 && (
+            uploadedDocuments.length === 0 && (
             <p className="js-reveal text-center text-school-muted">
               لا توجد ملفات PDF في هذا المجلد حالياً.
             </p>
           )}
         </div>
       </section>
+
+      {uploadedDocuments.length > 0 ? (
+        <section
+          id="manakh-uploaded"
+          className="bg-school-white py-[var(--section-pad-y)]"
+          aria-label="الملفات المرفوعة"
+        >
+          <div className="mx-auto max-w-6xl px-5 md:px-8">
+            <div className="js-reveal">
+              <UploadedFromAdminSection
+                id="manakh-uploaded-block"
+                items={uploadedDocuments}
+                pdfCardVariant="row"
+              />
+            </div>
+          </div>
+        </section>
+      ) : null}
     </>
   );
 }

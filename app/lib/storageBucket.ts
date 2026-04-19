@@ -121,3 +121,35 @@ export function mergeUniqueUrls(
   }
   return out;
 }
+
+/** لعرض الملفات المرفوعة (كل ما عدا الصور — الصور تُدمج في المعرض) */
+export type UploadedDocumentItem = {
+  title: string;
+  url: string;
+  fileKind: "pdf" | "docx" | "video" | "other";
+};
+
+export function splitStorageForDisplay(
+  files: StorageFileRef[]
+): { imageUrls: string[]; documents: UploadedDocumentItem[] } {
+  const imageUrls = files
+    .filter((f) => f.kind === "image")
+    .map((f) => f.url);
+
+  const documents: UploadedDocumentItem[] = files
+    .filter((f) => f.kind !== "image")
+    .map((f) => {
+      let fileKind: UploadedDocumentItem["fileKind"] = "other";
+      if (f.kind === "pdf") fileKind = "pdf";
+      else if (f.kind === "docx") fileKind = "docx";
+      else if (f.kind === "video") fileKind = "video";
+      return {
+        title: titleFromStorageFilename(f.name),
+        url: f.url,
+        fileKind,
+      };
+    });
+
+  documents.sort((a, b) => a.title.localeCompare(b.title, "ar"));
+  return { imageUrls, documents };
+}

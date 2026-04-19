@@ -4,6 +4,8 @@ import Link from "next/link";
 
 import { ImageGallery } from "@/app/components/ImageGallery";
 import { PDFHoverCard } from "@/app/components/PDFHoverCard";
+import { UploadedFromAdminSection } from "@/app/components/UploadedFromAdminSection";
+import type { UploadedDocumentItem } from "@/app/lib/storageBucket";
 import { siteFile } from "@/app/lib/publicAssets";
 
 const BASE = ["الموقع", "القيادة والحوكمة"] as const;
@@ -24,8 +26,7 @@ type IdaraPageContentProps = {
   supervisoryGalleryUrls: readonly string[];
   meetingFilenames: readonly string[];
   planFilenames: readonly string[];
-  /** وثائق PDF إضافية من Supabase (مجلد idara/) */
-  extraMainDocumentsFromStorage?: readonly { title: string; url: string }[];
+  uploadedDocuments?: readonly UploadedDocumentItem[];
 };
 
 function pdfTitleFromFilename(filename: string): string {
@@ -124,7 +125,7 @@ export function IdaraPageContent({
   supervisoryGalleryUrls,
   meetingFilenames,
   planFilenames,
-  extraMainDocumentsFromStorage = [],
+  uploadedDocuments = [],
 }: IdaraPageContentProps) {
   return (
     <>
@@ -183,14 +184,25 @@ export function IdaraPageContent({
                 </li>
               );
             })}
-            {extraMainDocumentsFromStorage.map((item) => (
-              <li key={`storage:${item.url}`}>
-                <PDFHoverCard title={item.title} url={item.url} />
-              </li>
-            ))}
           </ul>
         </div>
       </section>
+
+      {uploadedDocuments.length > 0 ? (
+        <section
+          id="idara-uploaded"
+          className="bg-school-white py-16 md:py-24"
+          aria-label="الملفات المرفوعة"
+        >
+          <div className="js-reveal mx-auto max-w-3xl px-4 md:px-6">
+            <UploadedFromAdminSection
+              id="idara-uploaded-block"
+              items={uploadedDocuments}
+              pdfCardVariant="card"
+            />
+          </div>
+        </section>
+      ) : null}
 
       <GallerySection
         id="idara-team-meetings-gallery"

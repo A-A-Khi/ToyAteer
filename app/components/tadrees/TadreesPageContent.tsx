@@ -4,7 +4,11 @@ import Link from "next/link";
 
 import { ImageGallery } from "@/app/components/ImageGallery";
 import { PDFHoverCard } from "@/app/components/PDFHoverCard";
-import { mergeUniqueUrls } from "@/app/lib/storageBucket";
+import { UploadedFromAdminSection } from "@/app/components/UploadedFromAdminSection";
+import {
+  mergeUniqueUrls,
+  type UploadedDocumentItem,
+} from "@/app/lib/storageBucket";
 import { siteFile } from "@/app/lib/publicAssets";
 
 const BASE = ["الموقع", "التدريس و التقويم"] as const;
@@ -121,7 +125,7 @@ function worksheetTitle(filename: string) {
 export type TadreesPageExtraProps = {
   mainGalleryExtraUrls?: readonly string[];
   scienceGalleryExtraUrls?: readonly string[];
-  storagePdfs?: readonly { title: string; url: string }[];
+  uploadedDocuments?: readonly UploadedDocumentItem[];
 };
 
 function DownloadIcon({ className }: { className?: string }) {
@@ -147,7 +151,7 @@ function DownloadIcon({ className }: { className?: string }) {
 export function TadreesPageContent({
   mainGalleryExtraUrls = [],
   scienceGalleryExtraUrls = [],
-  storagePdfs = [],
+  uploadedDocuments = [],
 }: TadreesPageExtraProps = {}) {
   const mainGalleryUrls = mergeUniqueUrls(
     MAIN_GALLERY_FILES.map((name) => siteFile([...BASE], name)),
@@ -361,28 +365,26 @@ export function TadreesPageContent({
               );
             })}
           </ul>
-
-          {storagePdfs.length > 0 ? (
-            <>
-              <h3 className="js-reveal mb-6 mt-16 text-xl font-bold text-school-black md:text-2xl">
-                مرفقات من السحابة (PDF)
-              </h3>
-              <ul className="js-reveal divide-y divide-neutral-200 border-y border-neutral-200 bg-school-white">
-                {storagePdfs.map((item, i) => (
-                  <li key={`storage:${item.url}`}>
-                    <PDFHoverCard
-                      title={item.title}
-                      url={item.url}
-                      variant="row"
-                      index={i + 1}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : null}
         </div>
       </section>
+
+      {uploadedDocuments.length > 0 ? (
+        <section
+          id="tadrees-uploaded"
+          className="bg-section-soft py-[var(--section-pad-y)]"
+          aria-label="الملفات المرفوعة"
+        >
+          <div className="mx-auto max-w-6xl px-5 md:px-8">
+            <div className="js-reveal">
+              <UploadedFromAdminSection
+                id="tadrees-uploaded-block"
+                items={uploadedDocuments}
+                pdfCardVariant="row"
+              />
+            </div>
+          </div>
+        </section>
+      ) : null}
     </>
   );
 }

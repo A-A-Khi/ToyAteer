@@ -7,9 +7,11 @@ import { listFilesByExtensionInPublicDir } from "@/app/lib/listPublicPdfs";
 import {
   listStorageFilesForPrefix,
   mergeUniqueUrls,
-  titleFromStorageFilename,
+  splitStorageForDisplay,
 } from "@/app/lib/storageBucket";
 import { siteFile } from "@/app/lib/publicAssets";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "مجال الإنجاز الدراسي — مدرسة طوي أعتير بنين",
@@ -50,22 +52,9 @@ export default async function InjazPage() {
   const docxFilenames = listFilesByExtensionInPublicDir(DETAIL_FOLDER, "docx");
 
   const storage = await listStorageFilesForPrefix("injaz");
-  const storageImages = storage
-    .filter((f) => f.kind === "image")
-    .map((f) => f.url);
-  const galleryUrls = mergeUniqueUrls(galleryUrlsBase, storageImages);
-  const storagePdfs = storage
-    .filter((f) => f.kind === "pdf")
-    .map((f) => ({
-      title: titleFromStorageFilename(f.name),
-      url: f.url,
-    }));
-  const storageDocx = storage
-    .filter((f) => f.kind === "docx")
-    .map((f) => ({
-      label: titleFromStorageFilename(f.name),
-      url: f.url,
-    }));
+  const { imageUrls, documents: uploadedDocuments } =
+    splitStorageForDisplay(storage);
+  const galleryUrls = mergeUniqueUrls(galleryUrlsBase, imageUrls);
 
   return (
     <PdfViewerProvider>
@@ -75,8 +64,7 @@ export default async function InjazPage() {
           <InjazPageContent
             galleryUrls={galleryUrls}
             docxFilenames={docxFilenames}
-            storagePdfs={storagePdfs}
-            storageDocx={storageDocx}
+            uploadedDocuments={uploadedDocuments}
           />
         </main>
         <SchoolFooter />

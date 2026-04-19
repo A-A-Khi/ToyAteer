@@ -7,8 +7,11 @@ import {
   listStorageFilesForPrefix,
   mergeUniqueUrls,
   titleFromStorageFilename,
+  type UploadedDocumentItem,
 } from "@/app/lib/storageBucket";
 import { siteFile } from "@/app/lib/publicAssets";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "مجال النمو الشخصي — مدرسة طوي أعتير بنين",
@@ -52,25 +55,26 @@ export default async function NomowPage() {
   const galleryUrlsBase = GALLERY_FILES.map((name) => siteFile([...BASE], name));
 
   const storage = await listStorageFilesForPrefix("nomow");
-  const storageImages = storage
+  const imageUrls = storage
     .filter((f) => f.kind === "image")
     .map((f) => f.url);
-  const galleryUrls = mergeUniqueUrls(galleryUrlsBase, storageImages);
+  const galleryUrls = mergeUniqueUrls(galleryUrlsBase, imageUrls);
   const extraVideoUrls = storage
     .filter((f) => f.kind === "video")
     .map((f) => f.url);
-  const storagePdfs = storage
-    .filter((f) => f.kind === "pdf")
-    .map((f) => ({
-      title: titleFromStorageFilename(f.name),
-      url: f.url,
-    }));
-  const storageDocx = storage
-    .filter((f) => f.kind === "docx")
-    .map((f) => ({
-      label: titleFromStorageFilename(f.name),
-      url: f.url,
-    }));
+  const uploadedDocuments: UploadedDocumentItem[] = storage
+    .filter((f) => f.kind !== "image" && f.kind !== "video")
+    .map((f) => {
+      let fileKind: UploadedDocumentItem["fileKind"] = "other";
+      if (f.kind === "pdf") fileKind = "pdf";
+      else if (f.kind === "docx") fileKind = "docx";
+      return {
+        title: titleFromStorageFilename(f.name),
+        url: f.url,
+        fileKind,
+      };
+    })
+    .sort((a, b) => a.title.localeCompare(b.title, "ar"));
 
   return (
     <PdfViewerProvider>
@@ -81,8 +85,7 @@ export default async function NomowPage() {
             videoUrl={videoUrl}
             galleryUrls={galleryUrls}
             extraVideoUrls={extraVideoUrls}
-            storagePdfs={storagePdfs}
-            storageDocx={storageDocx}
+            uploadedDocuments={uploadedDocuments}
           />
         </main>
         <SchoolFooter />

@@ -6,9 +6,11 @@ import { SchoolShell } from "@/app/components/SchoolShell";
 import {
   listStorageFilesForPrefix,
   mergeUniqueUrls,
-  titleFromStorageFilename,
+  splitStorageForDisplay,
 } from "@/app/lib/storageBucket";
 import { siteFile } from "@/app/lib/publicAssets";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "مجال الإدارة والقيادة والحوكمة — مدرسة طوي أعتير بنين",
@@ -133,16 +135,9 @@ export default async function IdaraPage() {
   );
 
   const storage = await listStorageFilesForPrefix("idara");
-  const storageImages = storage
-    .filter((f) => f.kind === "image")
-    .map((f) => f.url);
-  const galleryUrls = mergeUniqueUrls(galleryUrlsBase, storageImages);
-  const extraMainDocumentsFromStorage = storage
-    .filter((f) => f.kind === "pdf")
-    .map((f) => ({
-      title: titleFromStorageFilename(f.name),
-      url: f.url,
-    }));
+  const { imageUrls, documents: uploadedDocuments } =
+    splitStorageForDisplay(storage);
+  const galleryUrls = mergeUniqueUrls(galleryUrlsBase, imageUrls);
 
   return (
     <PdfViewerProvider>
@@ -157,7 +152,7 @@ export default async function IdaraPage() {
             supervisoryGalleryUrls={supervisoryGalleryUrls}
             meetingFilenames={MEETING_PDF_FILES}
             planFilenames={PLAN_PDF_FILES}
-            extraMainDocumentsFromStorage={extraMainDocumentsFromStorage}
+            uploadedDocuments={uploadedDocuments}
           />
         </main>
         <SchoolFooter />

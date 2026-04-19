@@ -9,9 +9,11 @@ import {
 import {
   listStorageFilesForPrefix,
   mergeUniqueUrls,
-  titleFromStorageFilename,
+  splitStorageForDisplay,
 } from "@/app/lib/storageBucket";
 import { siteFile } from "@/app/lib/publicAssets";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "مجال مناخ المدرسة وبيئة التعلم — مدرسة طوي أعتير بنين",
@@ -48,16 +50,9 @@ export default async function ManakhPage() {
   );
 
   const storage = await listStorageFilesForPrefix("manakh");
-  const storageImages = storage
-    .filter((f) => f.kind === "image")
-    .map((f) => f.url);
-  const galleryUrls = mergeUniqueUrls(galleryUrlsBase, storageImages);
-  const storagePdfs = storage
-    .filter((f) => f.kind === "pdf")
-    .map((f) => ({
-      title: titleFromStorageFilename(f.name),
-      url: f.url,
-    }));
+  const { imageUrls, documents: uploadedDocuments } =
+    splitStorageForDisplay(storage);
+  const galleryUrls = mergeUniqueUrls(galleryUrlsBase, imageUrls);
 
   return (
     <PdfViewerProvider>
@@ -68,7 +63,7 @@ export default async function ManakhPage() {
             galleryUrls={galleryUrls}
             rootPdfFiles={rootPdfFiles}
             subfolders={subfolders}
-            storagePdfs={storagePdfs}
+            uploadedDocuments={uploadedDocuments}
           />
         </main>
         <SchoolFooter />

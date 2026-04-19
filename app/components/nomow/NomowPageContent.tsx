@@ -4,6 +4,8 @@ import Link from "next/link";
 
 import { ImageGallery } from "@/app/components/ImageGallery";
 import { PDFHoverCard } from "@/app/components/PDFHoverCard";
+import { UploadedFromAdminSection } from "@/app/components/UploadedFromAdminSection";
+import type { UploadedDocumentItem } from "@/app/lib/storageBucket";
 import { siteFile } from "@/app/lib/publicAssets";
 
 const BASE = ["الموقع", "النمو الشخصي"] as const;
@@ -52,18 +54,14 @@ type NomowPageContentProps = {
   galleryUrls: readonly string[];
   /** فيديوهات إضافية من Supabase */
   extraVideoUrls?: readonly string[];
-  /** PDF من Supabase */
-  storagePdfs?: readonly { title: string; url: string }[];
-  /** Word من Supabase */
-  storageDocx?: readonly { label: string; url: string }[];
+  uploadedDocuments?: readonly UploadedDocumentItem[];
 };
 
 export function NomowPageContent({
   videoUrl,
   galleryUrls,
   extraVideoUrls = [],
-  storagePdfs = [],
-  storageDocx = [],
+  uploadedDocuments = [],
 }: NomowPageContentProps) {
   return (
     <>
@@ -171,6 +169,24 @@ export function NomowPageContent({
         </div>
       </section>
 
+      {uploadedDocuments.length > 0 ? (
+        <section
+          id="nomow-uploaded"
+          className="bg-section-soft py-[var(--section-pad-y)]"
+          aria-label="الملفات المرفوعة"
+        >
+          <div className="mx-auto max-w-6xl px-5 md:px-8">
+            <div className="js-reveal">
+              <UploadedFromAdminSection
+                id="nomow-uploaded-block"
+                items={uploadedDocuments}
+                pdfCardVariant="row"
+              />
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <section
         id="nomow-docs"
         className="bg-section-soft py-[var(--section-pad-y)]"
@@ -205,16 +221,6 @@ export function NomowPageContent({
                 </li>
               );
             })}
-            {storagePdfs.map((item, i) => (
-              <li key={`storage-pdf:${item.url}`}>
-                <PDFHoverCard
-                  title={item.title}
-                  url={item.url}
-                  variant="row"
-                  index={PDF_FILES.length + i + 1}
-                />
-              </li>
-            ))}
           </ul>
 
           <h3 className="js-reveal mb-6 mt-16 text-xl font-bold text-school-black md:text-2xl">
@@ -241,23 +247,6 @@ export function NomowPageContent({
                 </li>
               );
             })}
-            {storageDocx.map((item) => (
-              <li key={`storage-docx:${item.url}`}>
-                <a
-                  href={item.url}
-                  download
-                  className="flex w-full items-center justify-between gap-4 border border-neutral-200 bg-neutral-50 px-5 py-4 text-school-black transition hover:border-school-gold hover:bg-white"
-                >
-                  <span className="min-w-0 break-words font-medium">
-                    {item.label}
-                  </span>
-                  <span className="inline-flex shrink-0 items-center gap-2 rounded border border-school-gold px-4 py-2 text-sm font-semibold text-school-gold">
-                    <DownloadIcon className="h-5 w-5 text-school-gold" />
-                    تحميل
-                  </span>
-                </a>
-              </li>
-            ))}
           </ul>
         </div>
       </section>
