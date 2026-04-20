@@ -6,7 +6,10 @@ import { siteFile } from "@/app/lib/publicAssets";
 import type { UploadedDocumentItem } from "@/app/lib/storageBucket";
 
 const items: { title: string; filename: string }[] = [
-  { title: "رسالة المدير ورؤية المدير", filename: "رسالة المدير ورؤية المدير.pdf" },
+  {
+    title: "رسالة المدرسة و رؤية المدرسة",
+    filename: "رسالة المدير ورؤية المدير.pdf",
+  },
   { title: "البيانات الموظفين", filename: "البيانات الموظفين.pdf" },
   { title: "توزيع الشعب", filename: "توزيع الشعب.pdf" },
   {
